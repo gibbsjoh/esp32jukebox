@@ -2,6 +2,7 @@
 ESP32 + Serial MP3 module, just messing around
 
 Requires dfplayer-mp: https://github.com/Muhlex/dfplayer-mp
+
 Playing folder numbers doesn't seem to work, so I pass "None" and all seems OK.
 
 There's a button listener to go to the next track.
