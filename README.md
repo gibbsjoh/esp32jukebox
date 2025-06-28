@@ -1,5 +1,5 @@
 # esp32jukebox
-ESP32 + Serial MP3 module, just messing around
+MicroPython + ESP32 + Serial MP3 module, just messing around
 
 Requires dfplayer-mp: https://github.com/Muhlex/dfplayer-mp
 
@@ -9,6 +9,9 @@ UART0	GPIO 1	GPIO 3
 UART1	GPIO 10	GPIO 9  
 UART2	GPIO 17	GPIO 16  
 
+This is the board I used (got it from Amazon):  
+https://www.amazon.co.uk/dp/B0CDN6D8W8  
+It uses 9600 baud for the serial comms - be aware, as some dfplayer code out there specifies 115200.
 
 Playing folder numbers doesn't seem to work, so I pass "None" and all seems OK.
 
