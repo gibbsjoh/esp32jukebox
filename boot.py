@@ -23,7 +23,6 @@ platformString = platform.platform()
 theList = platformString.split('-')
 theArchitecture = theList[2]
 print(theArchitecture)
-
 if (theArchitecture == 'arm'):
     displaySCL = 15
     displaySDA = 14
@@ -38,7 +37,7 @@ else:
     playPausePin = 12
 # define pin for playback mode and play/pause
 
-
+# set up the OLED or LCD depending on the variable above
 if (displayType == "oled"):
     i2c = I2C(1, scl=Pin(displaySCL), sda=Pin(displaySDA))
     
@@ -91,14 +90,12 @@ import os
 # Function to log messages to a file
 def log_to_file(message):
     try:
-        # Open the file in append mode ('a') to add new logs without overwriting
-        with open("log.,txt", 'a') as file:
-            file.write(message + '\n')  # Write the message followed by a newline
+        with open("log.txt", 'a') as file:
+            file.write(message + '\n') 
     except OSError as e:
         print(f"Error writing to file: {e}")
 
-# TBD: Add Play/Pause button
-
+# TBD: Add Play/Pause button - not complete
 async def button_listener_playPause(df):
     button = Pin(playPausePin, Pin.IN, Pin.PULL_UP)
     prev_state = button.value()
@@ -110,6 +107,7 @@ async def button_listener_playPause(df):
             await df.next()
         prev_state = 0
 
+# Not in use right now...
 async def repl_trigger(df):
     print("Press Enter in REPL to skip to the next track...")
     try:
@@ -120,6 +118,7 @@ async def repl_trigger(df):
         print("Interrupted by user")
 
 # LED pin mapping
+# Not in use, this "seemed like a good idea at the time.."
 # 1 is green, 2 is amber, 3 is red
 LED_TRACK_MAP = {
     1: Pin(5, Pin.OUT),
@@ -127,7 +126,7 @@ LED_TRACK_MAP = {
     3: Pin(18, Pin.OUT)
 }
 
-# added - get the track names from playlist.json on the device
+# Get the track names from playlist.json on the device
 try:
     f = open("playlist.json",'r')
     theTracks=f.read()
@@ -137,16 +136,35 @@ try:
 except:
     print('Playlist file load failed')
 
-# shuffle track entries
+# shuffle track entries (mainly for future "random" playback function"
 def shuffle(array):
     for i in range(len(array)-1, 0, -1):
         j = random.randrange(i+1)
         array[i], array[j] = array[j], array[i]
     return array
 
+# displayStuff is work in progress, not used right now!
+def displayStuff(displayType, stuffToShow, clearFirst):
+    # clearFirst is 0 or 1
+    # stuffToShow can be a dictionary with the lines eg ["1":"SongName","2":"ArtistName"]
+    # can have line 3 or more if OLED
+    if displayType == "lcd" and clearFirst == 1:
+        lcd.clear()
+    elif displayType == "oled" and clearFirst == 1:
+         oled.fill(0)
+    
+    for line in stuffToShow:
+        lineValue = stuffToShow[line]
+        if displayType == "lcd":
+            # lcd
+            
+        elif displayType == "oled":
+            # oled
+
 trackNumbers =  [int(k) for k in theTracks.keys()]
 shuffleOrder = shuffle(trackNumbers)
 
+# Scroll text on OLED (not used?)
 async def scroll_text(oled, text, y=14, delay=0.1):
     oled.fill_rect(0, y, 128, 10, 0)  # Clear the text line
     width = len(text) * 8  # Approximate pixel width (assuming 8px per character)
@@ -157,6 +175,7 @@ async def scroll_text(oled, text, y=14, delay=0.1):
         oled.show()
         await asyncio.sleep(delay)
 
+# continuous scroll text on OLED
 async def scroll_text_continuous(oled, text, y=14, delay=0.05):
     display_width = 128
     char_width = 8  # each character is approx 8 pixels wide
@@ -184,6 +203,7 @@ async def scroll_text_continuous(oled, text, y=14, delay=0.05):
 
 
 # TBD: Amend to show green for playing, amber for random, red for paused
+# Not used, again this seemed like a cool thing at the time..
 async def track_led_monitor(df):
     active_pin = None
     last_track = None
@@ -228,6 +248,7 @@ async def track_led_monitor(df):
                         await scroll_task_title
                     except asyncio.CancelledError:
                         pass
+                # TBD! Some sort of unified function like "displayStuff()" that will display on the selected device rather than an if/elif
                 if (displayType == "oled"):
                     oled.fill(0)
                     oled.text('Now Playing:', 1, 2, 1)
@@ -316,14 +337,4 @@ async def main():
     print("Playing track")
     # await df.play(None, 1) # folder 1, file 1
     # Run button listener alongside
-    asyncio.create_task(button_listener_playPause(df))  
-    # asyncio.create_task(button_listener_playbackMode(df))
-    asyncio.create_task(track_led_monitor(df))
-    print("starting autoplay loop")
-    asyncio.create_task(auto_play_loop(df))
-    # Keep the main task alive
-    while True:
-        await asyncio.sleep(0.1)
-    #print("Player status:", await df.playing
-
-run(main())
+    asyncio.create_task(butto
