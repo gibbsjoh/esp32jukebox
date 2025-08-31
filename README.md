@@ -1,4 +1,4 @@
-# pi pico ukebox
+# pi pico jukebox
 I got a Pi Pico and decided to rework the code to run on that. It was relatively straightforward!
 
 Requires dfplayer-mp: https://github.com/Muhlex/dfplayer-mp 
