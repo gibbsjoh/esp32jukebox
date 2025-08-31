@@ -1,7 +1,13 @@
 # pi pico ukebox
 I got a Pi Pico and decided to rework the code to run on that. It was relatively straightforward!
 
-Requires dfplayer-mp: https://github.com/Muhlex/dfplayer-mp and also the relevant modules for either the OLED display or the 2 row LCD display. Links TBD.
+Requires dfplayer-mp: https://github.com/Muhlex/dfplayer-mp 
+
+and also the relevant modules for either the OLED display or the 2 row LCD display:
+
+LCD: https://github.com/RuiSantosdotme/Random-Nerd-Tutorials/tree/master/Projects/ESP-MicroPython/lcd
+
+OLED: TBD
 
 The whole setup can be powered from the USB port or via 5v on the relevant pin. I used a little board that came with a breadboard kit that takes 6v-9v in and outputs 5v and 3.3v to the power pins on the breadboard.
 
