@@ -6,16 +6,9 @@ import uasyncio as asyncio
 import ssd1306
 import ujson
 import platform
-from time import sleep
-import os
-import random
-from array import array
-
-print("Starting Up!")
-sleep(1)
 
 # set if using the 128x64 OLED or the 2 line LCD ("oled" or "lcd)
-displayType = "lcd"
+displayType = "oled"
 
 # I got a Pi Pico!
 # amend here to assign pins based on if it's a pico or esp32
@@ -28,19 +21,16 @@ if (theArchitecture == 'arm'):
     displaySCL = 15
     displaySDA = 14
     uartInstance = 0
-    playbackModePin = 3
-    playPausePin = 2
 else:
     displaySCL = 15
     displaySDA = 14
     uartInstance = 2
-    playbackModePin = 14
-    playPausePin = 12
 # define pin for playback mode and play/pause
-
+playbackModePin = 14
+playPausePin = 12
 
 if (displayType == "oled"):
-    i2c = I2C(1, scl=Pin(displaySCL), sda=Pin(displaySDA))
+    i2c = I2C(0, scl=Pin(displaySCL), sda=Pin(displaySDA))
     
     def init_oled():
         global oled
@@ -85,27 +75,15 @@ playMode = "sequential"
 # define playbackStatus, default is "stopped"
 playbackStatus = "stopped"
 
-# add log to file
-import os
-
-# Function to log messages to a file
-def log_to_file(message):
-    try:
-        # Open the file in append mode ('a') to add new logs without overwriting
-        with open("log.,txt", 'a') as file:
-            file.write(message + '\n')  # Write the message followed by a newline
-    except OSError as e:
-        print(f"Error writing to file: {e}")
-
 # TBD: Add Play/Pause button
 
 async def button_listener_playPause(df):
-    button = Pin(playPausePin, Pin.IN, Pin.PULL_UP)
+    button = Pin(playPausePin, Pin.IN)
     prev_state = button.value()
     while True:
         await asyncio.sleep_ms(20)  # debounce delay
         curr_state = button.value()
-        if curr_state == 0:
+        if curr_state == 1:
             print("Button pressed!")
             await df.next()
         prev_state = 0
@@ -140,12 +118,12 @@ except:
 # shuffle track entries
 def shuffle(array):
     for i in range(len(array)-1, 0, -1):
-        j = random.randrange(i+1)
+        j = randrange(i+1)
         array[i], array[j] = array[j], array[i]
-    return array
 
-trackNumbers =  [int(k) for k in theTracks.keys()]
+trackNumbers = list(theTracks.keys())
 shuffleOrder = shuffle(trackNumbers)
+print(shuffleOrder)
 
 async def scroll_text(oled, text, y=14, delay=0.1):
     oled.fill_rect(0, y, 128, 10, 0)  # Clear the text line
@@ -250,14 +228,12 @@ async def track_led_monitor(df):
 
 # Function to loop tracks
 async def auto_play_loop(df):
-    log_to_file("autoplay loop called")
     try:
         total_tracks = await df.num_files_device()
         current_track = 1
 
         while True:
             print(f"Attempting to play track {current_track}")
-            log_to_file(f"Attempting to play track {current_track}")
             track_started = False
 
             # Keep retrying until the track starts playing
@@ -268,26 +244,25 @@ async def auto_play_loop(df):
 
                     # Confirm playback started
                     if await df.playing() == 1:
-                        log_to_file(f"Track {current_track} is now playing")
                         print(f"Track {current_track} is now playing")
                         track_started = True
                     else:
-                        log_to_file(f"Track {current_track} did not start, retrying...")
+                        print(f"Track {current_track} did not start, retrying...")
                         await asyncio.sleep(2)  # brief pause before retry
 
                 except Exception as e:
-                    log_to_file(f"Error starting track {current_track}: {e}")
+                    print(f"Error starting track {current_track}: {e}")
                     await asyncio.sleep(2)  # wait before retrying
 
             # Wait until track finishes
             while True:
                 try:
                     if await df.playing() != 1:
-                        log_to_file(f"Track {current_track} finished")
+                        print(f"Track {current_track} finished")
                         break
                     await asyncio.sleep(1)
                 except Exception as e:
-                    log_to_file(f"Error checking playback status: {e}")
+                    print(f"Error checking playback status: {e}")
                     await asyncio.sleep(2)  # keep polling
 
             # Move to next track
@@ -296,34 +271,31 @@ async def auto_play_loop(df):
                 current_track = 1
 
     except Exception as e:
-        log_to_file(f"auto_play_loop crashed fatally:{e}")
-           
+        print("auto_play_loop crashed fatally:", e)
+
+            
 async def main():
-    # df = DFPlayer(uartInstance) # using UART id 2
-    df = DFPlayer(1)
+    df = DFPlayer(uartInstance) # using UART id 2
     print("Awaiting UART connection...")
-    sleep(2)
     df.init() # initialize UART connection
-    print("INIT complete..")
     print("Awaiting player ready...")
     await df.wait_available() # optional; making sure DFPlayer finished booting
-    lcd.clear()
+
     await df.volume(25)
     print("DFPlayer reports volume:", await df.volume())
-    totalFiles = await df.num_files_device()
-    totalFiles = str(totalFiles)
-    print(f"DFPlayer reports filecount: {totalFiles}")
+    await df.num_files_device()
+    print("DFPlayer reports filecount:", await df.num_files_device())
     print("Playing track")
-    # await df.play(None, 1) # folder 1, file 1
+#   await df.play(None, 1) # folder 1, file 1
     # Run button listener alongside
-    asyncio.create_task(button_listener_playPause(df))  
-    # asyncio.create_task(button_listener_playbackMode(df))
+    asyncio.create_task(button_listener_playPause(df))
+#   asyncio.create_task(button_listener_playbackMode(df))
     asyncio.create_task(track_led_monitor(df))
-    print("starting autoplay loop")
     asyncio.create_task(auto_play_loop(df))
     # Keep the main task alive
     while True:
-        await asyncio.sleep(0.1)
+        await sleep(1)
     #print("Player status:", await df.playing
 
 run(main())
+
